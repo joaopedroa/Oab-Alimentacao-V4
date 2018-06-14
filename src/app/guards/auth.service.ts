@@ -12,13 +12,29 @@ export class AuthService {
 
     this.fire.auth.signInWithEmailAndPassword(email, senha).then((user) => {
       console.log(user.uid);
-      localStorage.setItem('uid',user.uid);      
+      localStorage.setItem('uid',user.uid);
       //this.authState = user;
       this.router.navigate(['simulado']);
     }) .catch(error => {
       console.log('got an error',error);
-     // alert('Email ou Senha incorreto!')
-     swal("Erro ao efetuar login!", "Email ou senha incorreto!", "error");
+      // alert('Email ou Senha incorreto!')
+      let errorCode = error.code;
+      let errorMessage = error.message;
+
+      if(errorMessage == "auth/invalid-email"){
+        erroLogin = "Email ou senha Incorretos";
+      }else if(errorMessage == "auth/wrong-password"){
+        erroLogin = "Email ou senha Incorretos";
+      }else if(errorMessage == "auth/user-not-found"){
+        erroLogin = "Usuário Não Cadastrado";
+      }else if(errorMessage == "The email address is badly formatted."){
+        erroLogin = "Insira um Email válido";
+      }else{
+        erroLogin = "Usuário ou senha Inválido";
+      }
+
+     let mensagem;
+     swal("Erro ao efetuar login!", erroLogin, "error");
   });
 }
 
