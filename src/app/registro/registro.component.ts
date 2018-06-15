@@ -27,8 +27,25 @@ export class RegistroComponent implements OnInit {
    })
    .catch(error =>{
      console.log('got an error',error)
-    // alert('Email ou senha inválido para cadastro!');
-    swal("Atenção!", "Email ou senha inválido para cadastro!", "warning");
+     // alert('Email ou senha inválido para cadastro!');
+     let mensagem;
+     var errorCode = error.code;
+     var errorMessage = error.message;
+
+     if(errorMessage == "auth/invalid-email"){
+       mensagem  = "Email Inválido";
+     }else if(errorMessage == "The email address is badly formatted."){
+       mensagem = "Insira um Email válido";
+     }else if(errorMessage == "Password should be at least 6 characters"){
+       mensagem = "A senha precisa de no mínimo 6 caracteres";
+     } else if(errorMessage == "The email address is already in use by another account."){
+       mensagem = "E-mail já esta em uso.\nEscolha outro E-mail para registrar";
+     } else {
+       mensagem = "Email ou senha inválido para cadastro!";
+     }
+
+
+    swal("Atenção!", mensagem, "warning");
    });
 }
 }
