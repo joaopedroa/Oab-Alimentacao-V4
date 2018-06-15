@@ -58,6 +58,7 @@ export class SimuladoComponent implements OnInit {
   numeroQuestao:number;
   chaveAno:string;
   aux:Observable<any[]>;
+  validaExcel:boolean;
   @ViewChild('valuePath') valuePath; 
    
   constructor(public database:AngularFireDatabase,private modalService: NgbModal, public fire:AngularFireAuth) {
@@ -88,18 +89,29 @@ export class SimuladoComponent implements OnInit {
   });
   this.aux.take(1).forEach(item => {
     console.log('item', item);
-    this.chaveAno = item[0].$key;
+    //this.chaveAno = item[0].$key;
+    if(item.length > 0){
     this.getChaveAno(item[0]).then((chaveAno) => {
-      if(chaveAno != undefined){
+      
         this.perguntas = this.database.list(`simulados/${chaveAno}/questions/${this.disciplina}`).snapshotChanges().map(arr => {
           return arr.map(snap => Object.assign(snap.payload.val(), { $key: snap.key }) )
         });
-      }
+        this.validaExcel = true;
       this.perguntas.forEach(item =>{
         console.log(item);
+        
       });
     });
-    
+  }else{
+    this.perguntas = this.database.list(`simulados/8000/questions/${this.disciplina}`).snapshotChanges().map(arr => {
+      return arr.map(snap => Object.assign(snap.payload.val(), { $key: snap.key }) )
+    });
+    this.validaExcel = false;
+    this.perguntas.forEach(item =>{
+      console.log(item);
+      
+    });
+  }
     
   
   });
@@ -114,6 +126,7 @@ export class SimuladoComponent implements OnInit {
       this.year.push(this.dataYear);
       this.dataYear--;
     }
+ console.log(this.validaExcel)
     
 }
 
@@ -123,6 +136,8 @@ getChaveAno(chave){
     resolve(this.chaveAno);
   })
 }
+
+
 
 ngOnInit() {
 
@@ -153,19 +168,33 @@ selectAno(){
   });
   this.aux.take(1).forEach(item => {
     console.log('item', item);
-    this.chaveAno = item[0].$key;
+    //this.chaveAno = item[0].$key;
+    if(item.length > 0){
     this.getChaveAno(item[0]).then((chaveAno) => {
-      if(chaveAno != undefined){
+     
         this.perguntas = this.database.list(`simulados/${chaveAno}/questions/${this.disciplina}`).snapshotChanges().map(arr => {
           return arr.map(snap => Object.assign(snap.payload.val(), { $key: snap.key }) )
         });
-      }
+        this.validaExcel = true
+        
       this.perguntas.forEach(item =>{
         console.log(item);
+        
+        
+     
+     
       });
     });
+  }else{
+    this.perguntas = this.database.list(`simulados/8000/questions/${this.disciplina}`).snapshotChanges().map(arr => {
+      return arr.map(snap => Object.assign(snap.payload.val(), { $key: snap.key }) )
+    });
+    this.validaExcel = false;
+  }
   });
-  
+
+
+
 }
 open(content, item) {
 
@@ -182,14 +211,14 @@ open(content, item) {
   this.resposta3Editar = item.respostas.c.descricao
   this.resposta4Editar = item.respostas.d.descricao
   this.respostaCorretaEditar = item.resposta_correta
-  if(item.justificativas !== undefined){
+  
   this.justificativaresposta1Editar = item.respostas.a.justificativa 
   this.justificativaresposta2Editar = item.respostas.b.justificativa 
   this.justificativaresposta3Editar = item.respostas.c.justificativa 
   this.justificativaresposta4Editar = item.respostas.d.justificativa 
-}
+
   this.keyEditar = item.$key;
-  
+
 }
 
 private getDismissReason(reason: any): string {
@@ -408,8 +437,8 @@ next(number:number){
   });
 
 */
-  let chaveAno =  this.database.list('simulados/',ref => ref.orderByChild('ano').equalTo(this.valueYear)).snapshotChanges().map(arr => {
-    return arr.map(snap => Object.assign(snap.payload.val(), { $key: snap.key }) )
+  let chaveAno =  this.database.list('simulados/').snapshotChanges().map(arr => {
+    return arr.map(snap => Object.assign(snap.payload.val(), { $key: snap.key }) ).filter(i => i.ano == this.valueYear)
   }).take(1).forEach(item =>{
     let questions = []; 
     if(item.length > 0){
@@ -505,16 +534,45 @@ next(number:number){
             }
    return dados;
   }
+  
 
   enviarPerguntaUpload(){
       
      
         for(let x in this.result){
 
+
+         
+            let dados = {  
+                       "pergunta":this.result[x].Pergunta,
+                       "resposta_correta": this.result[x].respostaCorreta,
+                       "respostas":{  
+                          "a":{  
+                             "descricao":this.result[x].resposta1,
+                             "justificativa":this.result[x].justificativaresposta1 || null
+                          },
+                          "b":{  
+                             "descricao":this.result[x].resposta2,
+                             "justificativa":this.result[x].justificativaresposta2 || null
+                          },
+                          "c":{  
+                             "descricao":this.result[x].resposta3,
+                             "justificativa":this.result[x].justificativaresposta3 || null
+                          },
+                          "d":{  
+                             "descricao":this.result[x].resposta4,
+                             "justificativa":this.result[x].justificativaresposta4 || null
+                          }
+                       }
+                    }
+           
+          
+        
+          
           if(this.result[x].Pergunta == null || this.result[x].Pergunta == undefined || this.result[x].Pergunta == "" ){
             
             this.validacao = 1;
-          }else 
+          }else   
           if(
               (this.result[x].resposta1 == null || this.result[x].resposta1 == undefined || this.result[x].resposta1 == "") ||
               (this.result[x].resposta2 == null || this.result[x].resposta2 == undefined || this.result[x].resposta2 == "") ||
@@ -537,8 +595,8 @@ next(number:number){
           else{
             
               this.validacao = 2;
-
-        this.database.list('simulado/' + this.valueYear + '/' + this.disciplina).push({
+          /*
+        this.database.list('simulados/' + this.chaveAno).push({
           pergunta: this.result[x].Pergunta, 
           ano: this.valueYear,
           criadaPor: this.fire.auth.currentUser.email,
@@ -559,11 +617,55 @@ next(number:number){
         
 
       })
+      */
+     /*
+     let chaveAno =  this.database.list('simulados/').snapshotChanges().map(arr => {
+      return arr.map(snap => Object.assign(snap.payload.val(), { $key: snap.key }) ).filter(i => i.ano == this.valueYear)
+    }).take(this.result.length).forEach(item =>{
+      let questions = []; 
+      if(item.length > 0){
+        if(item[0].questions.hasOwnProperty(this.disciplina)){
+          questions = item[0].questions[this.disciplina];
+        }
+        let all = questions.length;
+        questions[all] = dados;  
+        this.database.object('simulados/'+item[0].$key + '/questions/' + this.disciplina).set(questions);
+      } else if(x == '0') {
+
+        let novo = {
+          ano: this.valueYear,
+          questions: {
+            [`${this.disciplina}`]: [
+             dados
+            ]
+          }
+        }
+        this.database.list('simulados/').push(novo);
+      }
+      console.log('i', item)
+    });
+    */
+
+ 
+  if(this.validaExcel){
+    this.getDisciplinaTamanho().then((resultado) => {
+      this.database.object('simulados/' + this.chaveAno + '/questions/' + this.disciplina + '/' + resultado ).set(dados);
+    })
+    
+  }
     }
-    }
-  
+    }  
   }
 
-  
+  getDisciplinaTamanho(){
+
+    return new Promise(resolve => {
+      this.database.list('simulados/' + this.chaveAno + '/questions/' + this.disciplina).snapshotChanges().map(arr => {
+        return arr.map(snap => Object.assign(snap.payload.val(), { $key: snap.key }) ).filter(i => i.ano == this.valueYear)
+      }).forEach(val => {
+        resolve(val.length);
+      });
+    });
+  }
 
 }
